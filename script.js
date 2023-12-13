@@ -1,5 +1,11 @@
 const CHOICES = ["rock", "paper", "scissors"];
 
+const N_GAMES = 5;
+
+let gamesLostCount = 0;
+let gamesWonCount = 0;
+
+
 function getRandomChoice() {
     i = Math.floor(Math.random() * 3);
     return CHOICES[i];
@@ -16,47 +22,84 @@ function beats(one, two) {
     return false;
 }
 
-function playRound(playerChoice, computerChoice) {
-    while (true) {
+function playRound(playerChoice) {
+    let computerChoice = getRandomChoice();
+    let result = false;
+    while (!result) {
         if (beats(playerChoice, computerChoice)) {
-            return `You Win! ${playerChoice} beats ${computerChoice}!`;
+            gamesWonCount++;
+            result = true;
         }
         else if (beats(computerChoice, playerChoice)) {
-            return `You Lose! ${computerChoice} beats ${playerChoice}!`;
+            gamesLostCount++;
+            result = true;
         }
-        computerChoice = getRandomChoice();
+        else {
+            // draw - play again
+            computerChoice = getRandomChoice();
+        }
     }
 }
 
-function game() {
-    let ROUNDS = 5;
-    let playerChoice, computerChoice, result;
-    let winCount = 0;
-    for (let i=0; i<ROUNDS; i++) {
-        while (true) {
-            playerChoice = prompt("Enter rock, paper or scissors");
-            if (CHOICES.includes(playerChoice.toLowerCase())) {
-                break;
-            }
-            alert(`Bad entry: ${playerChoice}`);
-        }
-        computerChoice = getRandomChoice();
-        result = playRound(playerChoice, computerChoice);
-        console.log(result);
-        if (result.includes("You Win")) {
-            winCount++;
-        }
+playButtons = document.querySelector("#play-buttons");
+playButtons.addEventListener("click", (e) => {
+    let result;
+    switch (e.target.id) {
+        case "btn-rock":
+            playRound("rock");
+            break;
+        case "btn-paper":
+            playRound("paper");
+            break;
+        case "btn-scissors":
+            playRound("scissors");
+            break;
+        default:
+            alert(`Unexpected button press: ${e.target}`);
+            break;
     }
-    console.log(`You won ${winCount} of ${ROUNDS}`);
-    if (winCount == ROUNDS/2) {
-        console.log("Draw!");
+    displayResults();
+    checkForWin();
+});
+
+
+function displayResults() {
+    results = document.querySelector("#results");
+    while (results.hasChildNodes()) {
+        results.removeChild(results.firstChild);
     }
-    else if (winCount > ROUNDS/2) {
-        console.log("You win!");
-    }
-    else {
-        console.log("Computer wins!");
+    let paragraphs = [
+        `Your score: ${gamesWonCount}`,
+        `Computer's score: ${gamesLostCount}`,
+    ];
+    for (let paragraph of paragraphs) {
+        let p = document.createElement("p");
+        p.textContent = paragraph;
+        results.appendChild(p);
     }
 }
 
-game();
+function checkForWin() {
+    if (    gamesWonCount == N_GAMES ||
+            gamesLostCount == N_GAMES) {
+        let paragraphs = [
+            (gamesWonCount > gamesLostCount) ?
+                "You win!" :
+                "Computer wins!",
+            "Refresh page to play another round."
+        ]
+        for (let paragraph of paragraphs) {
+            let p = document.createElement("p");
+            p.textContent = paragraph;
+            results.appendChild(p);
+        }
+        disablePlayButtons();
+    }
+}
+
+function disablePlayButtons() {
+    btns = document.querySelectorAll(".play-btn");
+    for (let btn of btns) {
+        btn.disabled = true;
+    }
+}
